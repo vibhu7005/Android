@@ -13,30 +13,57 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import com.example.androidlearning.ui.theme.AndroidLearningTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.concurrent.thread
 
 class MainActivity : ComponentActivity() {
     val TAG = "MainActivity"
+
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "Main starts ${Thread.currentThread().name}")
-        GlobalScope.launch {
-            Log.d(TAG, "work started ${Thread.currentThread().name}}")
-            Thread.sleep(1000)
-            Log.d(TAG, "work finished ${Thread.currentThread().name}")
+
+        val job = GlobalScope.launch(start = CoroutineStart.LAZY) {
+            Log.d(TAG, "ou")
         }
 
-//        GlobalScope.launch {
-//            Log.d(TAG, "work started 2 ${Thread.currentThread().name}}")
-//            Log.d(TAG, "work finished 2${Thread.currentThread().name}")
+        Thread.sleep(2000)
+
+        job.start()
+
+
+//        CoroutineScope(Dispatchers.IO).launch {
+//
 //        }
-        Log.d(TAG, "finish ${Thread.currentThread().name}")
+//        runBlocking {
+//            // Launch 1000 coroutines
+//            repeat(1000) { i ->
+//                launch {
+//                    delay(100)
+//                    Log.d(TAG, "$i completed")
+//                }
+//            }
+//
+//            delay(200)
+//            Log.d(TAG, "process finish")
+//        }
+//
+////        GlobalScope.launch {
+////            Log.d(TAG, "work started 2 ${Thread.currentThread().name}}")
+////            Log.d(TAG, "work finished 2${Thread.currentThread().name}")
+////        }
+//        Log.d(TAG, "finish ${Thread.currentThread().name}")
 
         setContent {
             AndroidLearningTheme {
