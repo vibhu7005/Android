@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.example.androidlearning.ui.theme.AndroidLearningTheme
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -34,15 +35,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "Main starts ${Thread.currentThread().name}")
 
-        val job = GlobalScope.launch(start = CoroutineStart.LAZY) {
-            Log.d(TAG, "ou")
+        val job = GlobalScope.launch {
+            repeat(1000) { i->
+                try {
+                    Log.d(TAG, "$i run")
+                    delay(10)
+                } catch (ex : CancellationException) {
+                    Log.d(TAG, "cancelled $ex")
+                }
+            }
         }
 
-        Thread.sleep(2000)
-
-        job.start()
-
-
+        Thread.sleep(200)
+        job.cancel()
 //        CoroutineScope(Dispatchers.IO).launch {
 //
 //        }
