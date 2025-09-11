@@ -25,6 +25,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.concurrent.thread
 
 class MainActivity : ComponentActivity() {
@@ -35,19 +36,31 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "Main starts ${Thread.currentThread().name}")
 
-        val job = GlobalScope.launch {
-            repeat(1000) { i->
-                try {
-                    Log.d(TAG, "$i run")
-                    delay(10)
-                } catch (ex : CancellationException) {
-                    Log.d(TAG, "cancelled $ex")
+        GlobalScope.launch {
+            val result : String? = withTimeoutOrNull(2000) {
+                repeat(500) { i->
+                    Log.d(TAG, "$i")
+                    delay(1)
                 }
+                "Completed"
             }
+            delay(3000)
+            Log.d(TAG, result.toString())
         }
 
-        Thread.sleep(200)
-        job.cancel()
+//        val job = GlobalScope.launch {
+//            repeat(1000) { i->
+//                try {
+//                    Log.d(TAG, "$i run")
+//                    delay(10)
+//                } catch (ex : CancellationException) {
+//                    Log.d(TAG, "cancelled $ex")
+//                }
+//            }
+//        }
+//
+//        Thread.sleep(200)
+//        job.cancel()
 //        CoroutineScope(Dispatchers.IO).launch {
 //
 //        }
