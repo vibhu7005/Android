@@ -17,12 +17,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.example.androidlearning.ui.theme.AndroidLearningTheme
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -51,15 +54,32 @@ class MainActivity : ComponentActivity() {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        runBlocking {  }
-        GlobalScope.launch(Dispatchers.Main) {
-            Log.d(TAG, "${Thread.currentThread().name}")
-            val x = launch {
-                Log.d(TAG, "${Thread.currentThread().name}")
-            }
-//                callSito()}
-//            val y = async { callMito()}
+
+        val scope = CoroutineScope(Dispatchers.IO + CoroutineExceptionHandler {x,y -> {
+
+        }} + CoroutineName("MyCustomScope"))
+
+        scope.launch {
+
         }
+        runBlocking {  }
+        val handler = CoroutineExceptionHandler {exception, throwable ->
+            Log.d(TAG, "exception handled")
+        }
+
+        GlobalScope.launch(handler) {
+            throw Exception("")
+        }
+
+
+//        GlobalScope.launch(Dispatchers.Main) {
+//            Log.d(TAG, "${Thread.currentThread().name}")
+//            val x = launch {
+//                Log.d(TAG, "${Thread.currentThread().name}")
+//            }
+////                callSito()}
+////            val y = async { callMito()}
+//        }
 
 
 
