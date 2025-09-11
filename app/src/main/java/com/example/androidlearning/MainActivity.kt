@@ -22,31 +22,65 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.concurrent.thread
+import kotlin.math.log
 
 class MainActivity : ComponentActivity() {
     val TAG = "MainActivity"
 
+    suspend fun callSito() : Int {
+        repeat(500) { i->
+            Log.d(TAG, "callSito: $i")
+            delay(10)
+        }
+        return 4
+    }
+    suspend fun callMito() : Int  {
+        repeat(500) { m->
+            Log.d(TAG, "callMito: $m")
+            delay(10)
+        }
+        return 5
+    }
+
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d(TAG, "Main starts ${Thread.currentThread().name}")
-
-        GlobalScope.launch {
-            val result : String? = withTimeoutOrNull(2000) {
-                repeat(500) { i->
-                    Log.d(TAG, "$i")
-                    delay(1)
-                }
-                "Completed"
+        runBlocking {  }
+        GlobalScope.launch(Dispatchers.Main) {
+            Log.d(TAG, "${Thread.currentThread().name}")
+            val x = launch {
+                Log.d(TAG, "${Thread.currentThread().name}")
             }
-            delay(3000)
-            Log.d(TAG, result.toString())
+//                callSito()}
+//            val y = async { callMito()}
         }
+
+
+
+
+
+
+
+
+
+
+//        GlobalScope.launch {
+//            val result : String? = withTimeoutOrNull(2000) {
+//                repeat(500) { i->
+//                    Log.d(TAG, "$i")
+//                    delay(1)
+//                }
+//                "Completed"
+//            }
+//            delay(3000)
+//            Log.d(TAG, result.toString())
+//        }
 
 //        val job = GlobalScope.launch {
 //            repeat(1000) { i->
