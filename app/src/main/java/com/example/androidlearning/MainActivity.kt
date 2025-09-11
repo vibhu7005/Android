@@ -25,6 +25,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -33,8 +34,31 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.concurrent.thread
 import kotlin.math.log
 
+
+
+
+
 class MainActivity : ComponentActivity() {
+    val channel =  Channel<Int>()
     val TAG = "MainActivity"
+
+
+
+
+
+
+
+    suspend fun produce() {
+        channel.send(1)
+        channel.send(2)
+    }
+
+
+    suspend fun consume() {
+        Log.d(TAG, ""+channel.receive())
+        Log.d(TAG, ""+channel.receive())
+
+    }
 
     suspend fun callSito() : Int {
         repeat(500) { i->
@@ -54,22 +78,26 @@ class MainActivity : ComponentActivity() {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val scope = CoroutineScope(Dispatchers.IO + CoroutineExceptionHandler {x,y -> {
-
-        }} + CoroutineName("MyCustomScope"))
-
-        scope.launch {
-
-        }
-        runBlocking {  }
-        val handler = CoroutineExceptionHandler {exception, throwable ->
-            Log.d(TAG, "exception handled")
+        runBlocking {
+            produce()
+            consume()
         }
 
-        GlobalScope.launch(handler) {
-            throw Exception("")
-        }
+//        val scope = CoroutineScope(Dispatchers.IO + CoroutineExceptionHandler {x,y -> {
+//
+//        }} + CoroutineName("MyCustomScope"))
+//
+//        scope.launch {
+//
+//        }
+//        runBlocking {  }
+//        val handler = CoroutineExceptionHandler {exception, throwable ->
+//            Log.d(TAG, "exception handled")
+//        }
+//
+//        GlobalScope.launch(handler) {
+//            throw Exception("")
+//        }
 
 
 //        GlobalScope.launch(Dispatchers.Main) {
