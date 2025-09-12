@@ -72,23 +72,78 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val flow = flow {
-            repeat(5) { i ->
-                delay(2000)
-                emit(i)
-                throw Exception("Error")
-                Log.d(TAG, "emit: $i ${Thread.currentThread().name}")
-            }
-        }.catch {e->
+        // UI Event Channel - for user clicks, navigation, etc.
+        val uiEventChannel = Channel<String>()
+        
+        // Progress Channel - for showing loading states
+        val progressChannel = Channel<Int>()
+        
+        // Error Channel - conflated to show only latest error
+        val errorChannel = Channel<String>(Channel.CONFLATED)
+        
+        // Unlimited buffer channel - for high-frequency events
+        val logChannel = Channel<String>(Channel.UNLIMITED)
 
+        // Producer: Simulates background work with progress updates
+        GlobalScope.launch(Dispatchers.IO) {
+            repeat(10) { progress ->
+                delay(500)
+                progressChannel.send(progress * 10) // Send progress 0%, 10%, 20%...
+                logChannel.send("Background task progress: ${progress * 10}%")
+                
+                if (progress == 5) {
+                    errorChannel.send("Warning: Halfway done!")
+                }
+            }
+            
+            progressChannel.send(100) // Complete
+            logChannel.send("Background task completed!")
+            uiEventChannel.send("TASK_COMPLETE")
         }
 
-
+        // Consumer: UI thread listening to channels
         GlobalScope.launch(Dispatchers.Main) {
-            flow.collect { i ->
-                delay(5000)
-                Log.d(TAG, "collect: $i")
+            // Listen to progress updates
+            launch {
+                for (progress in progressChannel) {
+                    Log.d(TAG, "UI Progress: $progress%")
+                }
             }
+            
+            // Listen to UI events
+            launch {
+                for (event in uiEventChannel) {
+                    Log.d(TAG, "UI Event: $event")
+                    when (event) {
+                        "TASK_COMPLETE" -> Log.d(TAG, "Show success dialog")
+                        "USER_CLICKED" -> Log.d(TAG, "Handle user click")
+                    }
+                }
+            }
+            
+            // Listen to errors (conflated - only latest)
+            launch {
+                for (error in errorChannel) {
+                    Log.d(TAG, "UI Error: $error")
+                }
+            }
+            
+            // Listen to logs (unlimited buffer)
+            launch {
+                for (logMsg in logChannel) {
+                    Log.d(TAG, "Log: $logMsg")
+                }
+            }
+        }
+
+        // Simulate user interaction
+        GlobalScope.launch {
+            delay(3000)
+            uiEventChannel.send("USER_CLICKED")
+            
+            delay(2000) 
+            errorChannel.send("Network error!")
+            errorChannel.send("Database error!") // This replaces previous error (CONFLATED)
         }
 
 //        scope.launch { produce() }
