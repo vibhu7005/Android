@@ -30,6 +30,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -39,7 +41,7 @@ import kotlin.math.log
 
 
 class MainActivity : ComponentActivity() {
-    val list = listOf(1,2,3,4).asFlow()
+    val list = listOf(1, 2, 3, 4).asFlow()
     val TAG = "MainActivity"
 
     suspend fun consumee() {
@@ -70,20 +72,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //cold flows
-        val x = flow {
-            for (i in 1..10) {
+        val flow = flow {
+            repeat(5) { i ->
+                delay(2000)
                 emit(i)
-                Log.d(TAG, "emiited $i")
-                delay(5000)
+                throw Exception("Error")
+                Log.d(TAG, "emit: $i ${Thread.currentThread().name}")
             }
+        }.catch {e->
+
         }
 
-        val scope = CoroutineScope(Dispatchers.IO)
-        scope.launch {
-            x.collect {
-                Log.d(TAG, "collected $it")
-                delay(4000)
+
+        GlobalScope.launch(Dispatchers.Main) {
+            flow.collect { i ->
+                delay(5000)
+                Log.d(TAG, "collect: $i")
             }
         }
 
