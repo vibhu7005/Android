@@ -28,6 +28,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -35,40 +38,28 @@ import kotlin.concurrent.thread
 import kotlin.math.log
 
 
-
-
-
 class MainActivity : ComponentActivity() {
-    val channel =  Channel<Int>()
+    val list = listOf(1,2,3,4).asFlow()
     val TAG = "MainActivity"
 
-
-
-
-
-
-
-    suspend fun produce() {
-        channel.send(1)
-        channel.send(2)
+    suspend fun consumee() {
+        list.collect {
+            Log.d(TAG, "consume: $it")
+            delay(100)
+        }
     }
 
 
-    suspend fun consume() {
-        Log.d(TAG, ""+channel.receive())
-        Log.d(TAG, ""+channel.receive())
-
-    }
-
-    suspend fun callSito() : Int {
-        repeat(500) { i->
+    suspend fun callSito(): Int {
+        repeat(500) { i ->
             Log.d(TAG, "callSito: $i")
             delay(10)
         }
         return 4
     }
-    suspend fun callMito() : Int  {
-        repeat(500) { m->
+
+    suspend fun callMito(): Int {
+        repeat(500) { m ->
             Log.d(TAG, "callMito: $m")
             delay(10)
         }
@@ -78,10 +69,26 @@ class MainActivity : ComponentActivity() {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        runBlocking {
-            produce()
-            consume()
+
+        //cold flows
+        val x = flow {
+            for (i in 1..10) {
+                emit(i)
+                Log.d(TAG, "emiited $i")
+                delay(5000)
+            }
         }
+
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
+            x.collect {
+                Log.d(TAG, "collected $it")
+                delay(4000)
+            }
+        }
+
+//        scope.launch { produce() }
+//        scope.launch { consume() }
 
 //        val scope = CoroutineScope(Dispatchers.IO + CoroutineExceptionHandler {x,y -> {
 //
@@ -108,14 +115,6 @@ class MainActivity : ComponentActivity() {
 ////                callSito()}
 ////            val y = async { callMito()}
 //        }
-
-
-
-
-
-
-
-
 
 
 //        GlobalScope.launch {
