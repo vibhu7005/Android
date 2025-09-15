@@ -24,6 +24,8 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
@@ -36,11 +38,14 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.concurrent.thread
 import kotlin.math.log
+import kotlin.system.measureTimeMillis
 
 
 class MainActivity : ComponentActivity() {
@@ -74,48 +79,131 @@ class MainActivity : ComponentActivity() {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
-        val channel = Channel<Int>()
-        GlobalScope.launch {
-            repeat(50) { i ->
-                delay(100)
-                channel.send(i)
-//                Log.d(TAG, "send: $i")
-            }
+        val exceptionHandler = CoroutineExceptionHandler { a, b ->
+            Log.d(TAG, "Exception handled: $b")
         }
 
-        GlobalScope.launch {
-            channel.receiveAsFlow().collect { c->
-                Log.d(TAG, "receive 1: $c ")
+
+        val scope = CoroutineScope(SupervisorJob())
+
+
+        val kob : Job = CoroutineScope(Dispatchers.IO).launch {
+
+            supervisorScope {
 
             }
-//            for (c in channel) {
-//                Log.d(TAG, "receive 1: $c ")
+
+        }
+
+
+
+
+        lifecycleScope.launch(exceptionHandler ) {
+//            supervisorScope {
+                launch (SupervisorJob()){
+                    launch {
+                        delay(100)
+                        Log.d(TAG, "l11")
+                    }
+                    delay(60)
+                    throw Exception()
+                }
+
+                launch {
+                    delay(100)
+                    Log.d(TAG, "l2")
+                }
+
+                launch {
+                    delay(200)
+                    Log.d(TAG, "l3")
+                }
+                delay(800)
+                Log.d(TAG, "parent")
 //            }
         }
 
-        GlobalScope.launch {
-            channel.receiveAsFlow().collect { c->
-                Log.d(TAG, "receive 2: $c ")
 
-            }
-//            for (c in channel) {
+//        runBlocking {
+//
+//            val time = measureTimeMillis {
+//
+//                val exceptionHandler = CoroutineExceptionHandler { a, b ->
+//                    Log.d(TAG, "onCreate: ")
+//                }
+//
+//                val job1 = GlobalScope.launch(Dispatchers.IO + exceptionHandler + CoroutineName("fdf")) {
+//                    channel.collect {c ->
+//                        delay(1000)
+//                        Log.d(TAG, "receive 1: $c ")
+//                    }
+//                }
+//
+//                val job2 = GlobalScope.launch {
+//                    channel.collect { c ->
+////                        delay(1000)
+//                        Log.d(TAG, "receive 2: $c ")
+//                    }
+//                }
+//
+//                val job3 = GlobalScope.launch {
+//                    channel.collect { c ->
+////                        delay(1000)
+//                        Log.d(TAG, "receive 3: $c ")
+//                    }
+//                }
+//
+//                job1.join()
+//                job2.join()
+//                job3.join()
 //            }
-        }
+//
+//
+//            Log.d(TAG, "time: $time")
+//        }
 
-        GlobalScope.launch {
-            channel.receiveAsFlow().collect { c->
-                Log.d(TAG, "receive 3: $c ")
-
-            }
-//            for (c in channel) {
-//                Log.d(TAG, "receive 3: $c ")
+//
+//        val channel = Channel<Int>()
+//        GlobalScope.launch {
+//            repeat(50) { i ->
+//                channel.send(i)
 //            }
-        }
-
-
-
+//            channel.close()
+//        }
+//        runBlocking {
+//
+//            val time = measureTimeMillis {
+//
+//                val job1 = GlobalScope.launch {
+//                    for (c in channel) {
+//                        delay(1000)
+//                        Log.d(TAG, "receive 1: $c ")
+//                    }
+//                }
+//
+//                val job2 = GlobalScope.launch {
+//                    for (c in channel) {
+//                        delay(1000)
+//                        Log.d(TAG, "receive 2: $c ")
+//                    }
+//                }
+//
+//                 val job3 = GlobalScope.launch {
+//
+//                    for (c in channel) {
+//                        delay(1000)
+//                        Log.d(TAG, "receive 3: $c ")
+//                    }
+//                }
+//
+//                job1.join()
+//                job2.join()
+//                job3.join()
+//            }
+//
+//
+//            Log.d(TAG, "time: $time")
+//        }
 
 
 //        val xd = MutableStateFlow<Int>(0)
@@ -292,8 +380,7 @@ class MainActivity : ComponentActivity() {
 ////            Log.d(TAG, "work finished 2${Thread.currentThread().name}")
 ////        }
 //        Log.d(TAG, "finish ${Thread.currentThread().name}")
-
-        setContent {
+        setContent() {
             AndroidLearningTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
@@ -304,20 +391,20 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    @Composable
+    fun Greeting(name: String, modifier: Modifier = Modifier) {
+        Text(
+            text = "Hello $name!",
+            modifier = modifier
+        )
+    }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AndroidLearningTheme {
-        Greeting("Android")
+    @Preview(showBackground = true)
+    @Composable
+    fun GreetingPreview() {
+        AndroidLearningTheme {
+            Greeting("Android")
+        }
     }
 }
